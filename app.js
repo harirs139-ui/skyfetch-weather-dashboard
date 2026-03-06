@@ -26,6 +26,9 @@ function WeatherApp(apiKey) {
  * Initialize event listeners and display welcome message
  */
 WeatherApp.prototype.init = function() {
+    // Load any saved searches from localStorage
+    this.loadStorage();
+    
     // Add click event listener to search button with proper context binding
     this.searchBtn.addEventListener('click', this.handleSearch.bind(this));
     
@@ -36,8 +39,10 @@ WeatherApp.prototype.init = function() {
         }
     });
     
-    // Show welcome message on page load
-    this.showWelcome();
+    // If there was no last city (welcome already shown), show welcome message
+    if (!localStorage.getItem('skyfetch_last')) {
+        this.showWelcome();
+    }
     
     console.log('🌤️ SkyFetch Weather Dashboard initialized with OOP structure!');
 };
@@ -78,6 +83,9 @@ WeatherApp.prototype.handleSearch = function() {
         return;
     }
     
+    // Save to recent searches and localStorage
+    this.saveSearch(city);
+    
     // Fetch weather data for the city
     this.getWeather(city);
     
@@ -112,6 +120,68 @@ WeatherApp.prototype.showError = function(title, description) {
     `;
     
     this.weatherDisplay.innerHTML = errorHTML;
+};
+
+/*******
+ * Storage Helpers (Part 4)
+ *******/
+
+// Load recent searches and last city from localStorage
+WeatherApp.prototype.loadStorage = function() {
+    const recentRaw = localStorage.getItem('skyfetch_recent');
+    this.recent = recentRaw ? JSON.parse(recentRaw) : [];
+    
+    // Render buttons for recent searches
+    this.renderRecentSearches();
+    
+    // If there's a last search, automatically fetch it
+    const last = localStorage.getItem('skyfetch_last');
+    if (last) {
+        this.getWeather(last);
+    }
+};
+
+// Save a new city to recent searches
+WeatherApp.prototype.saveSearch = function(city) {
+    city = city.trim();
+    if (!city) return;
+    
+    // create or update recent array
+    if (!this.recent) this.recent = [];
+    // remove duplicates (case insensitive)
+    this.recent = this.recent.filter(c => c.toLowerCase() !== city.toLowerCase());
+    // add to front
+    this.recent.unshift(city);
+    // limit to 5 items
+    if (this.recent.length > 5) {
+        this.recent.pop();
+    }
+    
+    // persist
+    localStorage.setItem('skyfetch_recent', JSON.stringify(this.recent));
+    localStorage.setItem('skyfetch_last', city);
+    
+    this.renderRecentSearches();
+};
+
+// Render clickable buttons for each recent search
+WeatherApp.prototype.renderRecentSearches = function() {
+    const container = document.getElementById('recent-searches');
+    if (!container) return;
+    container.innerHTML = '';
+    
+    if (!this.recent || this.recent.length === 0) return;
+    
+    this.recent.forEach(city => {
+        const btn = document.createElement('button');
+        btn.textContent = city;
+        btn.addEventListener('click', () => {
+            // when user clicks a recent search, treat it as a new search
+            this.saveSearch(city);
+            this.getWeather(city);
+        });
+        container.appendChild(btn);
+    });
 };
 
 /**
