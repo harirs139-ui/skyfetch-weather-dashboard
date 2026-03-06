@@ -19,7 +19,7 @@ body {
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     padding: 40px;
-    max-width: 500px;
+    max-width: 700px;
     width: 100%;
     animation: slideIn 0.5s ease-out;
 }
@@ -259,7 +259,95 @@ h1 {
     line-height: 1.6;
 }
 
+/* Forecast Section Styles - Part 3 */
+.forecast-section {
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid #eee;
+}
+
+.forecast-title {
+    font-size: 1.5rem;
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 700;
+}
+
+.forecast-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+}
+
+.forecast-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+    padding: 20px 15px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.forecast-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.forecast-day {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.forecast-icon {
+    width: 60px;
+    height: 60px;
+    margin: 10px auto;
+    display: block;
+}
+
+.forecast-temp {
+    font-size: 1.8rem;
+    color: #667eea;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.forecast-description {
+    font-size: 0.85rem;
+    color: #666;
+    text-transform: capitalize;
+    line-height: 1.4;
+}
+
 /* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 30px;
+        max-width: 100%;
+    }
+
+    .forecast-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .forecast-card {
+        padding: 15px 10px;
+    }
+
+    .forecast-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .forecast-temp {
+        font-size: 1.5rem;
+    }
+}
+
 @media (max-width: 480px) {
     .container {
         padding: 25px;
@@ -289,5 +377,31 @@ h1 {
 
     .weather-details {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .forecast-container {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .forecast-card {
+        padding: 12px 8px;
+    }
+
+    .forecast-icon {
+        width: 45px;
+        height: 45px;
+    }
+
+    .forecast-day {
+        font-size: 0.95rem;
+    }
+
+    .forecast-temp {
+        font-size: 1.3rem;
+    }
+
+    .forecast-description {
+        font-size: 0.75rem;
     }
 }
