@@ -286,5 +286,7 @@ WeatherApp.prototype.displayForecast = function(data) {
 
 /**
  * Initialize the WeatherApp with API key
+ * TODO: Replace 'YOUR_API_KEY' with your actual OpenWeatherMap API key
+ * Get free key at: https://openweathermap.org/api
  */
-const app = new WeatherApp('94fd94d27434e88e5b8b3f1fd99efe3f');
+const app = new WeatherApp('YOUR_API_KEY');
