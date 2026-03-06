@@ -266,6 +266,29 @@ h1 {
     border-top: 2px solid #eee;
 }
 
+/* Recent Search Styles - Part 4 */
+.recent-searches {
+    margin: 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recent-searches button {
+    padding: 8px 16px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
+}
+
+.recent-searches button:hover {
+    background: #5a67d8;
+}
+
 .forecast-title {
     font-size: 1.5rem;
     color: #333;
