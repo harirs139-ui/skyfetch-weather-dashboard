@@ -1,73 +1,200 @@
-// API Configuration
-const API_KEY = '94fd94d27434e88e5b8b3f1fd99efe3f'; // OpenWeatherMap API Key
-const API_URL = 'https://api.openweathermap.org/data/2.5/weather';
-
-// DOM Elements
-const searchBtn = document.getElementById('search-btn');
-const cityInput = document.getElementById('city-input');
-const weatherDisplay = document.getElementById('weather-display');
+/**
+ * Part 3: Weather Dashboard - OOP with Prototypal Inheritance
+ * Organized structure with forecast feature
+ */
 
 /**
- * Part 2: Refactored to Async/Await
- * Fetches weather data for a given city using async/await syntax
+ * WeatherApp Constructor
+ * Initializes the weather application and sets up DOM references
  */
-async function getWeather(city) {
+function WeatherApp(apiKey) {
+    // Store API configuration
+    this.apiKey = apiKey;
+    this.apiUrl = 'https://api.openweathermap.org/data/2.5/weather';
+    this.forecastUrl = 'https://api.openweathermap.org/data/2.5/forecast';
+    
+    // Store DOM element references (cache them for performance)
+    this.searchBtn = document.getElementById('search-btn');
+    this.cityInput = document.getElementById('city-input');
+    this.weatherDisplay = document.getElementById('weather-display');
+    
+    // Initialize the app
+    this.init();
+}
+
+/**
+ * Initialize event listeners and display welcome message
+ */
+WeatherApp.prototype.init = function() {
+    // Add click event listener to search button with proper context binding
+    this.searchBtn.addEventListener('click', this.handleSearch.bind(this));
+    
+    // Add Enter key support for quick search
+    this.cityInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            this.handleSearch();
+        }
+    });
+    
+    // Show welcome message on page load
+    this.showWelcome();
+    
+    console.log('🌤️ SkyFetch Weather Dashboard initialized with OOP structure!');
+};
+
+/**
+ * Display welcome message
+ */
+WeatherApp.prototype.showWelcome = function() {
+    const welcomeHTML = `
+        <div class="welcome-message">
+            <div class="welcome-emoji">🌍</div>
+            <div class="welcome-title">Welcome to SkyFetch</div>
+            <div class="welcome-subtitle">
+                Enter any city name in the search box above to get started!<br>
+                <br>
+                Try searching for: London, Paris, Tokyo, New York, or your own city!
+            </div>
+        </div>
+    `;
+    
+    this.weatherDisplay.innerHTML = welcomeHTML;
+};
+
+/**
+ * Handle search action triggered by button click or Enter key
+ */
+WeatherApp.prototype.handleSearch = function() {
+    const city = this.cityInput.value.trim();
+    
+    // Validate input
+    if (!city) {
+        this.showError('Empty Input', 'Please enter a city name to search.');
+        return;
+    }
+    
+    if (city.length < 2) {
+        this.showError('Input Too Short', 'Please enter at least 2 characters.');
+        return;
+    }
+    
+    // Fetch weather data for the city
+    this.getWeather(city);
+    
+    // Clear input field
+    this.cityInput.value = '';
+};
+
+/**
+ * Show loading state with spinner
+ */
+WeatherApp.prototype.showLoading = function() {
+    const loadingHTML = `
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Fetching weather data...</div>
+        </div>
+    `;
+    
+    this.weatherDisplay.innerHTML = loadingHTML;
+};
+
+/**
+ * Show error message
+ */
+WeatherApp.prototype.showError = function(title, description) {
+    const errorHTML = `
+        <div class="error-message">
+            <div class="error-icon">❌</div>
+            <div class="error-title">${title}</div>
+            <div class="error-description">${description}</div>
+        </div>
+    `;
+    
+    this.weatherDisplay.innerHTML = errorHTML;
+};
+
+/**
+ * Fetch current weather data for a city
+ */
+WeatherApp.prototype.getWeather = async function(city) {
     // Show loading state
-    showLoading();
+    this.showLoading();
     
     // Disable search button to prevent multiple simultaneous requests
-    searchBtn.disabled = true;
-    searchBtn.textContent = 'Searching...';
+    this.searchBtn.disabled = true;
+    this.searchBtn.textContent = 'Searching...';
     
-    const url = `${API_URL}?q=${city}&appid=${API_KEY}&units=metric`;
+    // Build API URLs
+    const currentWeatherUrl = `${this.apiUrl}?q=${city}&appid=${this.apiKey}&units=metric`;
     
     try {
-        // Use await with axios to fetch data
-        const response = await axios.get(url);
+        // Use Promise.all() to fetch both current weather and forecast simultaneously
+        const [currentWeather, forecastData] = await Promise.all([
+            axios.get(currentWeatherUrl),
+            this.getForecast(city)
+        ]);
         
-        // Log for debugging
-        console.log('Weather data received:', response.data);
+        console.log('Weather data received:', currentWeather.data);
+        console.log('Forecast data received:', forecastData);
         
-        // Display the weather data
-        displayWeather(response.data);
+        // Display current weather
+        this.displayWeather(currentWeather.data);
+        
+        // Display 5-day forecast
+        this.displayForecast(forecastData);
         
     } catch (error) {
-        // Handle different error types
         console.error('Error fetching weather:', error);
         
+        // Show appropriate error message based on error type
         if (error.response && error.response.status === 404) {
-            showError(
+            this.showError(
                 'City Not Found',
                 `The city "${city}" was not found. Please check the spelling and try again.`
             );
         } else if (error.response) {
-            showError(
+            this.showError(
                 'Error',
                 `An error occurred (Status: ${error.response.status}). Please try again later.`
             );
         } else {
-            showError(
+            this.showError(
                 'Network Error',
                 'Unable to fetch data. Please check your internet connection and try again.'
             );
         }
     } finally {
         // Re-enable search button
-        searchBtn.disabled = false;
-        searchBtn.textContent = '🔍 Search';
+        this.searchBtn.disabled = false;
+        this.searchBtn.textContent = '🔍 Search';
     }
-}
+};
 
 /**
- * Part 2: Display Weather Data
- * Formats and displays weather information
+ * Fetch forecast data for a city
  */
-function displayWeather(data) {
-    const { name, main, weather, wind, clouds } = data;
+WeatherApp.prototype.getForecast = async function(city) {
+    const url = `${this.forecastUrl}?q=${city}&appid=${this.apiKey}&units=metric`;
+    
+    try {
+        const response = await axios.get(url);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching forecast:', error);
+        throw error;
+    }
+};
+
+/**
+ * Display current weather
+ */
+WeatherApp.prototype.displayWeather = function(data) {
+    const { name, main, weather, wind, clouds, sys } = data;
     
     const weatherHTML = `
         <div class="weather-card">
-            <div class="city-name">${name}, ${data.sys.country}</div>
+            <div class="city-name">${name}, ${sys.country}</div>
             <div class="temperature">${Math.round(main.temp)}°C</div>
             <div class="weather-description">${weather[0].description}</div>
             
@@ -92,115 +219,72 @@ function displayWeather(data) {
         </div>
     `;
     
-    weatherDisplay.innerHTML = weatherHTML;
+    this.weatherDisplay.innerHTML = weatherHTML;
     
     // Focus back on input for better UX
-    cityInput.focus();
-}
+    this.cityInput.focus();
+};
 
 /**
- * Part 2: Show Loading State
- * Displays a spinner while fetching data
+ * Process forecast data to get one entry per day (at noon)
+ * Filters the 40 forecast items (3-hour intervals) to get 5 days at 12:00:00
  */
-function showLoading() {
-    const loadingHTML = `
-        <div class="loading-container">
-            <div class="spinner"></div>
-            <div class="loading-text">Fetching weather data...</div>
-        </div>
-    `;
+WeatherApp.prototype.processForecastData = function(data) {
+    // Filter to get only forecasts at 12:00:00 (noon)
+    const dailyForecasts = data.list.filter((item) => {
+        return item.dt_txt.includes('12:00:00');
+    });
     
-    weatherDisplay.innerHTML = loadingHTML;
-}
+    // Return only the first 5 days (5-day forecast)
+    return dailyForecasts.slice(0, 5);
+};
 
 /**
- * Part 2: Show Error Message
- * Displays user-friendly error messages
+ * Display 5-day forecast
  */
-function showError(title, description) {
-    const errorHTML = `
-        <div class="error-message">
-            <div class="error-icon">❌</div>
-            <div class="error-title">${title}</div>
-            <div class="error-description">${description}</div>
-        </div>
-    `;
+WeatherApp.prototype.displayForecast = function(data) {
+    // Process the forecast data to get 5 days
+    const dailyForecasts = this.processForecastData(data);
     
-    weatherDisplay.innerHTML = errorHTML;
-}
-
-/**
- * Part 2: Show Welcome Message
- * Displays initial welcome message
- */
-function showWelcome() {
-    const welcomeHTML = `
-        <div class="welcome-message">
-            <div class="welcome-emoji">🌍</div>
-            <div class="welcome-title">Welcome to SkyFetch</div>
-            <div class="welcome-subtitle">
-                Enter any city name in the search box above to get started!<br>
-                <br>
-                Try searching for: London, Paris, Tokyo, New York, or your own city!
+    // Create HTML for each forecast day
+    const forecastHTML = dailyForecasts.map((day) => {
+        // Convert Unix timestamp to date
+        const date = new Date(day.dt * 1000);
+        
+        // Format day name (Mon, Tue, etc.)
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        
+        // Extract weather data
+        const temp = Math.round(day.main.temp);
+        const description = day.weather[0].description;
+        const icon = day.weather[0].icon;
+        const iconUrl = `https://openweathermap.org/img/wn/${icon}@2x.png`;
+        
+        return `
+            <div class="forecast-card">
+                <div class="forecast-day">${dayName}</div>
+                <img src="${iconUrl}" alt="${description}" class="forecast-icon">
+                <div class="forecast-temp">${temp}°C</div>
+                <div class="forecast-description">${description}</div>
+            </div>
+        `;
+    }).join('');
+    
+    // Create forecast section HTML
+    const forecastSection = `
+        <div class="forecast-section">
+            <h3 class="forecast-title">5-Day Forecast</h3>
+            <div class="forecast-container">
+                ${forecastHTML}
             </div>
         </div>
     `;
     
-    weatherDisplay.innerHTML = welcomeHTML;
-}
+    // Append forecast to weather display (don't replace!)
+    this.weatherDisplay.innerHTML += forecastSection;
+};
 
 /**
- * Part 2: Validate City Input
- * Checks if input meets validation criteria
+ * Initialize the WeatherApp with API key
  */
-function validateCity(city) {
-    const trimmedCity = city.trim();
-    
-    if (!trimmedCity) {
-        showError('Empty Input', 'Please enter a city name to search.');
-        return null;
-    }
-    
-    if (trimmedCity.length < 2) {
-        showError('Input Too Short', 'Please enter at least 2 characters for a city name.');
-        return null;
-    }
-    
-    return trimmedCity;
-}
-
-/**
- * Part 2: Handle Search Action
- * Triggered by search button click or Enter key
- */
-function handleSearch() {
-    const city = validateCity(cityInput.value);
-    
-    if (city) {
-        getWeather(city);
-        cityInput.value = ''; // Clear input after search
-    }
-}
-
-/**
- * Part 2: Event Listeners
- * Attach click and keyboard event handlers
- */
-
-// Search button click event
-searchBtn.addEventListener('click', handleSearch);
-
-// Enter key support
-cityInput.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        handleSearch();
-    }
-});
-
-/**
- * Part 2: Initialize App
- * Show welcome message on page load
- */
-showWelcome();
-
-console.log('🌤️ SkyFetch Weather Dashboard loaded successfully!');
+const app = new WeatherApp('94fd94d27434e88e5b8b3f1fd99efe3f');
